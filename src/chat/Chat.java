@@ -12,7 +12,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 public class Chat {
-    enum direction {Up,Down,Left,Right};
     static int W=300,H=200;
     public static void main(String[] args) 
     {
@@ -38,7 +37,7 @@ public class Chat {
         btn.addActionListener(new ActionListener() {
             // @Owerride
             public void actionPerformed(ActionEvent event) {
-                //lable.setText(lable.getText()+" " + jText.getText());
+                lable.setText(lable.getText()+" " + jText.getText());
                 send(jText.getText());
                 jText.setText("");
                 System.out.println(lable.getText());
@@ -52,14 +51,15 @@ public class Chat {
         {
             Socket socket = null;
             try {// получение строки клиентом
-                socket = new Socket( "25.52.247.101" , 8030);
+                socket = new Socket("192.168.0.44", 8030);
                 BufferedReader dis = new BufferedReader(new InputStreamReader(
                 socket.getInputStream()));
                 String msg = dis.readLine();
                 lable.setText(msg);
                 System.out.println(msg);
+                socket.close();
             } catch (IOException e) {
-                System. out.println( "ошибка приема: " + e);
+                System.out.println( "ошибка приема: " + e);
             }
         }
     }
