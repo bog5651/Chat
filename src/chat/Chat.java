@@ -15,7 +15,7 @@ public class Chat {
     static int W=300,H=200;
     public static void main(String[] args) 
     {
-        JFrame fr=new JFrame("Чатик");
+        JFrame fr=new JFrame("Чат");
         fr.setPreferredSize( new Dimension(500,500));//по фпкту 300х300
         final JPanel pan= new JPanel();
         fr.add(pan);
