@@ -96,8 +96,8 @@ public class Chat {
                         s = server.accept();
                         if(s.isConnected()){
                             synchronized(FindedIp){
-                                System.out.println(Arrays.toString(s.getInetAddress().getAddress()));
-                                FindedIp.add(Arrays.toString(s.getInetAddress().getAddress()));
+                                System.out.println(s.getRemoteSocketAddress());
+                                FindedIp.add(s.getRemoteSocketAddress().toString());
                                 PrintStream ps = new PrintStream(s.getOutputStream());
                                 for(String ip:FindedIp)
                                 {
