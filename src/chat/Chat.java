@@ -6,10 +6,10 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -24,28 +24,26 @@ public class Chat {
         fr.setLayout(null); 
         JTextField jText = new JTextField(); 
         JButton btn = new JButton("Отправить сообщение"); 
-        JLabel lable = new JLabel("Text"); 
         JTextArea outText = new JTextArea("text"); 
-
+        JScrollPane scroll = new JScrollPane(outText);
 
         fr.add(jText); 
         fr.add(btn); 
-        fr.add(outText); 
+        fr.add(scroll); 
 
-        outText.setBounds(10,122,400,100); 
+        scroll.setBounds(10,122,400,100);
         outText.setEditable(false); 
-        outText.setLineWrap(true); 
+        outText.setLineWrap(true);
+
         jText.setBounds(10, 11, 400, 30); 
-        btn.setBounds(10,62,400,50); 
+        btn.setBounds(10,62,400,50);
 
         btn.addActionListener(new ActionListener() { 
             // @Owerride 
             public void actionPerformed(ActionEvent event) { 
                 send(jText.getText()); 
                 outText.setText(outText.getText() + "\n" + jText.getText());
-                jText.setText("");
-                System.out.println(lable.getText()); 
-                lable.updateUI(); 
+                jText.setText(""); 
             } 
         }); 
 
@@ -70,17 +68,70 @@ public class Chat {
         
         ArrayList<String> FindedIp = new ArrayList<String>();
         
+        //
+        Thread myThready = new Thread(new Runnable(){
+            @Override
+            public void run() //Этот метод будет говорить остальным, что это чат
+            {
+                while(true)
+                {
+                    Socket s = null;
+                    try { // посылка строки клиенту
+                        ServerSocket server = new ServerSocket(8031);
+                        s = server.accept();
+                        if(s.isConnected()){
+                            System.out.println(Arrays.toString(s.getInetAddress().getAddress()));
+                            FindedIp.add(Arrays.toString(s.getInetAddress().getAddress()));
+                            PrintStream ps = new PrintStream(s.getOutputStream());
+                            for(String ip:FindedIp)
+                            {
+                                ps.println(ip);
+                                ps.flush();
+                            }
+                            ps.println("END");
+                            ps.flush();
+                        }
+                        s.close(); // разрыв соединения
+                        server.close();
+                    } catch (IOException e) {
+                        System. out.println( " ошибка ожидания : " + e);
+                    }
+                }
+            }
+        });
+        myThready.start();	//Запуск потока
+        
+        
         Socket socetToTryConnect = null;
         socetToTryConnect = new Socket();
-        for(int i = 0; i<4;i++){
+        for(int i = 0; i<256;i++){
             for(int j = 0; j<256;j++){
                 try {
                     socetToTryConnect = new Socket();
                     System.out.println("Try :" + ToTryIp + i +"." +j);
-                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8031), 25);
-                    //socetToTryConnect.connect(new InetSocketAddress("192.168.0.44", 8031), 25);
-                    if(socetToTryConnect.isConnected())
+                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8031), 80);
+                    if((socetToTryConnect.isConnected())&&(!(ToTryIp + i +"." +j).equals(MyIp)))
                     {
+                        Socket Host = null;
+                        while(true)
+                        {
+                            try {// получение строки клиентом
+                                Host = new Socket(ToTryIp + i +"." +j, 8031);
+                                if(Host.isConnected()){
+                                    BufferedReader dis = new BufferedReader(new InputStreamReader(
+                                    Host.getInputStream()));
+                                    String Ip = dis.readLine();
+                                    if(Ip.equals("END"))
+                                    {
+                                        break;
+                                    }
+                                    FindedIp.add(Ip);
+                                }
+                                Host.close();
+                            } catch (IOException e) {
+                                System.out.println( "ошибка приема: " + e);
+                            }
+                        }
                         System.out.println("Find :" + ToTryIp + i +"." +j);
                         FindedIp.add(ToTryIp + i +"." +j);
                     }
@@ -98,26 +149,7 @@ public class Chat {
         
         //192.168.43.171
         //172.31.3.9
-        Thread myThready = new Thread(new Runnable(){
-            @Override
-            public void run() //Этот метод будет говорить остальным, что это чат
-            {
-                while(true)
-                {
-                    Socket s = null;
-                    try { // посылка строки клиенту
-                        ServerSocket server = new ServerSocket(8031);
-                        s = server.accept();
-                        s.close(); // разрыв соединения
-                        server.close();
-                    } catch (IOException e) {
-                        System. out.println( " ошибка отправки: " + e);
-                    }
-                }
-            }
-        });
-        myThready.start();	//Запуск потока
-
+        
         while(true)
         {
             Socket socket = null;
