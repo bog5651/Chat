@@ -7,6 +7,8 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -72,7 +74,7 @@ public class Chat {
         //ToTryIp = ToTryIp + partIp[2] + ".";
         
         ArrayList<String> FindedIp = new ArrayList<String>();
-        FindedIp.add(MyIp);
+        //FindedIp.add(MyIp);
         
         //поток "сервер" который радает список известных IP подключившимся
         Thread myThready = new Thread(new Runnable(){
@@ -89,6 +91,7 @@ public class Chat {
                 }
                 while(true)
                 {
+                    if(false==true) break;
                     try { // посылка строки клиенту
                         s = server.accept();
                         if(s.isConnected()){
@@ -104,10 +107,14 @@ public class Chat {
                             ps.flush();
                         }
                         s.close(); // разрыв соединения
-                        server.close();
                     } catch (IOException e) {
                         System. out.println( " ошибка ожидания : " + e);
                     }
+                }
+                try {
+                    server.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -167,6 +174,7 @@ public class Chat {
         //192.168.43.171
         //172.31.3.9
         //переходим в режим общения
+        //ToStringArray(FindedIp);
         System.out.println( "Перешел в режим ожидания");
         while(true)
         {
