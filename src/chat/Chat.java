@@ -22,7 +22,7 @@ public class Chat {
     public static int PortTalk = 8030;
     public static int TimeToWaitAnswer = 100;
     
-    public static void main(String[] args) 
+    public static void main(String[] args) throws InterruptedException 
     {        
         JFrame fr=new JFrame("Чат"); 
         fr.setPreferredSize( new Dimension(440,300));//по фпкту 300х300 
@@ -95,16 +95,18 @@ public class Chat {
                     try { // посылка строки клиенту
                         s = server.accept();
                         if(s.isConnected()){
-                            System.out.println(Arrays.toString(s.getInetAddress().getAddress()));
-                            FindedIp.add(Arrays.toString(s.getInetAddress().getAddress()));
-                            PrintStream ps = new PrintStream(s.getOutputStream());
-                            for(String ip:FindedIp)
-                            {
-                                ps.println(ip);
+                            synchronized(FindedIp){
+                                System.out.println(Arrays.toString(s.getInetAddress().getAddress()));
+                                FindedIp.add(Arrays.toString(s.getInetAddress().getAddress()));
+                                PrintStream ps = new PrintStream(s.getOutputStream());
+                                for(String ip:FindedIp)
+                                {
+                                    ps.println(ip);
+                                    ps.flush();
+                                }
+                                ps.println("END");
                                 ps.flush();
                             }
-                            ps.println("END");
-                            ps.flush();
                         }
                         s.close(); // разрыв соединения
                     } catch (IOException e) {
@@ -178,33 +180,36 @@ public class Chat {
         System.out.println( "Перешел в режим ожидания");
         while(true)
         {
-            for(String ip: FindedIp)
-            {
-                try{
-                    socetToTryConnect = new Socket();
-                    socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
-                    if(socetToTryConnect.isConnected())
-                    {
-                        Socket Host = null;
-                        while(true)
+            Thread.sleep(1000);
+            synchronized(FindedIp){
+                for(String ip: FindedIp)
+                {
+                    try{
+                        socetToTryConnect = new Socket();
+                        socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
+                        if(socetToTryConnect.isConnected())
                         {
-                            try {// получение строки клиентом
-                                Host = new Socket(ip, PortTalk);
-                                if(Host.isConnected()){
-                                    BufferedReader dis = new BufferedReader(new InputStreamReader(
-                                    Host.getInputStream()));
-                                    String msg = dis.readLine();
-                                    outText.setText(outText.getText() + "\n" + msg);
+                            Socket Host = null;
+                            while(true)
+                            {
+                                try {// получение строки клиентом
+                                    Host = new Socket(ip, PortTalk);
+                                    if(Host.isConnected()){
+                                        BufferedReader dis = new BufferedReader(new InputStreamReader(
+                                        Host.getInputStream()));
+                                        String msg = dis.readLine();
+                                        outText.setText(outText.getText() + "\n" + msg);
+                                    }
+                                    Host.close();
+                                } catch (IOException e) {
+                                    System.out.println( "ошибка приема: " + e);
                                 }
-                                Host.close();
-                            } catch (IOException e) {
-                                System.out.println( "ошибка приема: " + e);
                             }
                         }
+                        socetToTryConnect.close();
+                    } catch (IOException e) {
+                        System.out.println( "ошибка подключения: " + e);
                     }
-                    socetToTryConnect.close();
-                } catch (IOException e) {
-                    System.out.println( "ошибка подключения: " + e);
                 }
             }
         }
