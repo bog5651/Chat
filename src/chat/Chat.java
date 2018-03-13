@@ -5,58 +5,111 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class Chat {
     static int W=300,H=200;
     public static void main(String[] args) 
-    {
-        JFrame fr=new JFrame("Чат");
-        fr.setPreferredSize( new Dimension(500,500));//по фпкту 300х300
-        final JPanel pan= new JPanel();
-        fr.add(pan);
-        fr.setVisible(true);
-        fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
-        JTextField jText = new JTextField();
-        JButton btn = new JButton("Отправить сообщение");
-        JLabel lable = new JLabel("Text");
-        
-        fr.add(jText);
-        fr.add(btn);
-        fr.add(lable);
-        
-        lable.setBounds(200,200,100,50);
-        jText.setBounds(50, 51, 100, 50);
-        btn.setBounds(1,102,200,50);
-        
-        btn.addActionListener(new ActionListener() {
-            // @Owerride
-            public void actionPerformed(ActionEvent event) {
-                lable.setText(lable.getText()+" " + jText.getText());
-                send(jText.getText());
+    {        
+        JFrame fr=new JFrame("Чат"); 
+        fr.setPreferredSize( new Dimension(440,300));//по фпкту 300х300 
+        fr.setVisible(true); 
+        fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+        fr.setLayout(null); 
+        JTextField jText = new JTextField(); 
+        JButton btn = new JButton("Отправить сообщение"); 
+        JLabel lable = new JLabel("Text"); 
+        JTextArea outText = new JTextArea("text"); 
+
+
+        fr.add(jText); 
+        fr.add(btn); 
+        fr.add(outText); 
+
+        outText.setBounds(10,122,400,100); 
+        outText.setEditable(false); 
+        outText.setLineWrap(true); 
+        jText.setBounds(10, 11, 400, 30); 
+        btn.setBounds(10,62,400,50); 
+
+        btn.addActionListener(new ActionListener() { 
+            // @Owerride 
+            public void actionPerformed(ActionEvent event) { 
+                send(jText.getText()); 
+                outText.setText(outText.getText() + "\n" + jText.getText());
                 jText.setText("");
-                System.out.println(lable.getText());
-                lable.updateUI();
-            }
-        });
-        
+                System.out.println(lable.getText()); 
+                lable.updateUI(); 
+            } 
+        }); 
+
         fr.pack();
         
+        
+        InetAddress myIP = null;
+        try {
+            myIP = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            System. out.println( " ошибка доступа ->" + e);
+        }
+        String MyIp = "";
+        MyIp = myIP.getHostAddress();
+        
+        String partIp[] =  MyIp.split("\\.");
+        
+        System. out.println( " Мой IP ->" + myIP.getHostAddress());
+        String ToTryIp = partIp[0] + ".";
+        ToTryIp = ToTryIp + partIp[1]+ ".";
+        //ToTryIp = ToTryIp + partIp[2] + ".";
+        
+        ArrayList<String> FindedIp = new ArrayList<String>();
+        
+        Socket socetToTryConnect = null;
+        socetToTryConnect = new Socket();
+       // for(int i = 0; i<4;i++){
+        //    for(int j = 0; j<256;j++){
+                try {
+                    socetToTryConnect = new Socket();
+                    //System.out.println("Try :" + ToTryIp + i +"." +j);
+                    //socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8030), 25);
+                    socetToTryConnect.connect(new InetSocketAddress("192.168.43.171", 8030), 100);
+                    if(socetToTryConnect.isConnected())
+                    {
+                        System.out.println("Find :"/* + ToTryIp + i +"." +j*/);
+                        //FindedIp.add(ToTryIp + i +"." +j);
+                    }
+                    socetToTryConnect.close();
+                } catch (IOException e) {
+                    System.out.println( "ошибка подключения: " + e);
+                }
+         //   }
+       // }
+        System.out.println( "Найдено Ip: ");
+        for(String ip : FindedIp)
+        {
+            System.out.println(ip);
+        }
+        
+        //192.168.43.171
+        //172.31.3.9
         while(true)
         {
             Socket socket = null;
             try {// получение строки клиентом
-                socket = new Socket("192.168.0.44", 8030);
-                BufferedReader dis = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
-                String msg = dis.readLine();
-                lable.setText(msg);
-                System.out.println(msg);
+                socket = new Socket("192.168.43.171", 8030);
+                if(socket.isConnected()){
+                    BufferedReader dis = new BufferedReader(new InputStreamReader(
+                    socket.getInputStream()));
+                    String msg = dis.readLine();
+                    outText.setText(outText.getText() + "\n" + msg);
+                    System.out.println(msg);
+                }
                 socket.close();
             } catch (IOException e) {
                 System.out.println( "ошибка приема: " + e);
