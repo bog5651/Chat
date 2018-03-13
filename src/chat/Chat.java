@@ -96,13 +96,13 @@ public class Chat {
                         s = server.accept();
                         if(s.isConnected()){
                             synchronized(FindedIp){
-                                System.out.println(s.getRemoteSocketAddress());
-                                FindedIp.add(s.getRemoteSocketAddress().toString());
+                                System.out.println((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
+                                FindedIp.add((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
                                 PrintStream ps = new PrintStream(s.getOutputStream());
                                 for(String ip:FindedIp)
                                 {
                                     ps.println(ip);
-                                    ps.flush();
+                                    //ps.flush();
                                 }
                                 ps.println("END");
                                 ps.flush();
@@ -140,18 +140,23 @@ public class Chat {
                         Socket Host = null;
                         while(true)
                         {
+                            if(find) break;
                             try {// получение строки клиентом
                                 Host = new Socket(ToTryIp + i +"." +j, PortWait);
                                 if(Host.isConnected()){
                                     BufferedReader dis = new BufferedReader(new InputStreamReader(
                                     Host.getInputStream()));
-                                    String Ip = dis.readLine();
-                                    if(Ip.equals("END"))
+                                    String Ip = "";
+                                    while(true)
                                     {
-                                        find = true;
-                                        break;
+                                        Ip = dis.readLine();     
+                                        if(Ip.equals("END"))
+                                        {
+                                            find = true;
+                                            break;
+                                        }
+                                        FindedIp.add(Ip);
                                     }
-                                    FindedIp.add(Ip);
                                 }
                             } catch (IOException e) {
                                 System.out.println( "ошибка приема: " + e);
