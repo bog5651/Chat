@@ -1,15 +1,12 @@
 package chat;
 
 import java.awt.Dimension;
-import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -181,12 +178,6 @@ public class Chat {
             System.out.println(ip);
         }
         
-        //List<String> al = new ArrayList<>();
-        // add elements to al, including duplicates
-        Set<String> hs = new HashSet<>();
-        hs.addAll(FindedIp);
-        FindedIp.clear();
-        FindedIp.addAll(hs);
         //192.168.43.171
         //172.31.3.9
         //переходим в режим общения
