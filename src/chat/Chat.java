@@ -72,6 +72,7 @@ public class Chat {
         //ToTryIp = ToTryIp + partIp[2] + ".";
         
         ArrayList<String> FindedIp = new ArrayList<String>();
+        FindedIp.add(MyIp);
         
         //поток "сервер" который радает список известных IP подключившимся
         Thread myThready = new Thread(new Runnable(){
@@ -143,11 +144,11 @@ public class Chat {
                                     }
                                     FindedIp.add(Ip);
                                 }
-                                Host.close();
                             } catch (IOException e) {
                                 System.out.println( "ошибка приема: " + e);
                             }
                         }
+                        Host.close();
                         System.out.println("Find :" + ToTryIp + i +"." +j);
                         FindedIp.add(ToTryIp + i +"." +j);
                     }
