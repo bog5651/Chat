@@ -72,24 +72,24 @@ public class Chat {
         
         Socket socetToTryConnect = null;
         socetToTryConnect = new Socket();
-       // for(int i = 0; i<4;i++){
-        //    for(int j = 0; j<256;j++){
+        for(int i = 0; i<4;i++){
+            for(int j = 0; j<256;j++){
                 try {
                     socetToTryConnect = new Socket();
-                    //System.out.println("Try :" + ToTryIp + i +"." +j);
-                    //socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8030), 25);
-                    socetToTryConnect.connect(new InetSocketAddress("192.168.43.171", 8030), 100);
+                    System.out.println("Try :" + ToTryIp + i +"." +j);
+                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8031), 25);
+                    //socetToTryConnect.connect(new InetSocketAddress("192.168.0.44", 8031), 25);
                     if(socetToTryConnect.isConnected())
                     {
-                        System.out.println("Find :"/* + ToTryIp + i +"." +j*/);
-                        //FindedIp.add(ToTryIp + i +"." +j);
+                        System.out.println("Find :" + ToTryIp + i +"." +j);
+                        FindedIp.add(ToTryIp + i +"." +j);
                     }
                     socetToTryConnect.close();
                 } catch (IOException e) {
                     System.out.println( "ошибка подключения: " + e);
                 }
-         //   }
-       // }
+            }
+        }
         System.out.println( "Найдено Ip: ");
         for(String ip : FindedIp)
         {
@@ -98,11 +98,31 @@ public class Chat {
         
         //192.168.43.171
         //172.31.3.9
+        Thread myThready = new Thread(new Runnable(){
+            @Override
+            public void run() //Этот метод будет говорить остальным, что это чат
+            {
+                while(true)
+                {
+                    Socket s = null;
+                    try { // посылка строки клиенту
+                        ServerSocket server = new ServerSocket(8031);
+                        s = server.accept();
+                        s.close(); // разрыв соединения
+                        server.close();
+                    } catch (IOException e) {
+                        System. out.println( " ошибка отправки: " + e);
+                    }
+                }
+            }
+        });
+        myThready.start();	//Запуск потока
+
         while(true)
         {
             Socket socket = null;
             try {// получение строки клиентом
-                socket = new Socket("192.168.43.171", 8030);
+                socket = new Socket("192.168.0.44", 8030);
                 if(socket.isConnected()){
                     BufferedReader dis = new BufferedReader(new InputStreamReader(
                     socket.getInputStream()));
