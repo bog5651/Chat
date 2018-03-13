@@ -15,6 +15,11 @@ import javax.swing.JTextField;
 
 public class Chat {
     static int W=300,H=200;
+    
+    public static int PortWait = 8031;
+    public static int PortTalk = 8030;
+    public static int TimeToWaitAnswer = 100;
+    
     public static void main(String[] args) 
     {        
         JFrame fr=new JFrame("Чат"); 
@@ -68,16 +73,22 @@ public class Chat {
         
         ArrayList<String> FindedIp = new ArrayList<String>();
         
-        //
+        //поток "сервер" который радает список известных IP подключившимся
         Thread myThready = new Thread(new Runnable(){
             @Override
             public void run() //Этот метод будет говорить остальным, что это чат
             {
+                Socket s = null;
+                ServerSocket server = null;
+                try{
+                    server = new ServerSocket(PortWait);
+                } catch(IOException e)
+                {
+                    System. out.println( " ошибка получения порта: " + e);
+                }
                 while(true)
                 {
-                    Socket s = null;
                     try { // посылка строки клиенту
-                        ServerSocket server = new ServerSocket(8031);
                         s = server.accept();
                         if(s.isConnected()){
                             System.out.println(Arrays.toString(s.getInetAddress().getAddress()));
@@ -101,28 +112,33 @@ public class Chat {
         });
         myThready.start();	//Запуск потока
         
-        
+        System.out.println( "Перешел в режим поиска соучастников");
+        //ищем первого собеседника
         Socket socetToTryConnect = null;
-        socetToTryConnect = new Socket();
-        for(int i = 0; i<256;i++){
+        boolean find = false;
+        for(int i = 0; i < Integer.parseInt(partIp[2]) + 1;i++){
+            if(find) break;
             for(int j = 0; j<256;j++){
+                if(find) break;
+                if((ToTryIp + i +"." +j).equals(MyIp)) continue;
                 try {
                     socetToTryConnect = new Socket();
                     System.out.println("Try :" + ToTryIp + i +"." +j);
-                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, 8031), 80);
-                    if((socetToTryConnect.isConnected())&&(!(ToTryIp + i +"." +j).equals(MyIp)))
+                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, PortWait), TimeToWaitAnswer);
+                    if(socetToTryConnect.isConnected())
                     {
                         Socket Host = null;
                         while(true)
                         {
                             try {// получение строки клиентом
-                                Host = new Socket(ToTryIp + i +"." +j, 8031);
+                                Host = new Socket(ToTryIp + i +"." +j, PortWait);
                                 if(Host.isConnected()){
                                     BufferedReader dis = new BufferedReader(new InputStreamReader(
                                     Host.getInputStream()));
                                     String Ip = dis.readLine();
                                     if(Ip.equals("END"))
                                     {
+                                        find = true;
                                         break;
                                     }
                                     FindedIp.add(Ip);
@@ -149,22 +165,38 @@ public class Chat {
         
         //192.168.43.171
         //172.31.3.9
-        
+        //переходим в режим общения
+        System.out.println( "Перешел в режим ожидания");
         while(true)
         {
-            Socket socket = null;
-            try {// получение строки клиентом
-                socket = new Socket("192.168.0.44", 8030);
-                if(socket.isConnected()){
-                    BufferedReader dis = new BufferedReader(new InputStreamReader(
-                    socket.getInputStream()));
-                    String msg = dis.readLine();
-                    outText.setText(outText.getText() + "\n" + msg);
-                    System.out.println(msg);
+            for(String ip: FindedIp)
+            {
+                try{
+                    socetToTryConnect = new Socket();
+                    socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
+                    if(socetToTryConnect.isConnected())
+                    {
+                        Socket Host = null;
+                        while(true)
+                        {
+                            try {// получение строки клиентом
+                                Host = new Socket(ip, PortTalk);
+                                if(Host.isConnected()){
+                                    BufferedReader dis = new BufferedReader(new InputStreamReader(
+                                    Host.getInputStream()));
+                                    String msg = dis.readLine();
+                                    outText.setText(outText.getText() + "\n" + msg);
+                                }
+                                Host.close();
+                            } catch (IOException e) {
+                                System.out.println( "ошибка приема: " + e);
+                            }
+                        }
+                    }
+                    socetToTryConnect.close();
+                } catch (IOException e) {
+                    System.out.println( "ошибка подключения: " + e);
                 }
-                socket.close();
-            } catch (IOException e) {
-                System.out.println( "ошибка приема: " + e);
             }
         }
     }
@@ -173,7 +205,7 @@ public class Chat {
     {
         Socket s = null;
         try { // посылка строки клиенту
-            ServerSocket server = new ServerSocket(8030);
+            ServerSocket server = new ServerSocket(PortTalk);
             s = server.accept();
             PrintStream ps = new PrintStream(s.getOutputStream());
             ps.println( msg );
