@@ -156,7 +156,7 @@ public class Chat {
                     {
                         try{
                             socetToTryConnect = new Socket();
-                            socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), 1500);
+                            socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), 10000);
                             if(socetToTryConnect.isConnected())
                             {
                                 Socket Host = null;
@@ -170,7 +170,6 @@ public class Chat {
                                             String msg = dis.readLine();
                                             outText.setText(outText.getText() + "\n" + msg);
                                         }
-                                        Host.close();
                                     } catch (IOException e) {
                                         System.out.println( "ошибка приема: " + e);
                                     }
@@ -254,7 +253,7 @@ public class Chat {
             {
                 try {
                     socetToTryConnect = new Socket();
-                    System.out.println("Try :" + host);
+                    System.out.println("Check :" + host);
                     socetToTryConnect.connect(new InetSocketAddress(host, PortWait), timeout);
                     if(socetToTryConnect.isConnected())
                     {                    
@@ -275,7 +274,7 @@ public class Chat {
         Socket socetToTryConnect = null;
         try {
             socetToTryConnect = new Socket();
-            System.out.println("Try :" + host);
+            System.out.println("Try Get:" + host);
             socetToTryConnect.connect(new InetSocketAddress(host, PortWait), TimeToWaitAnswer);
             if(socetToTryConnect.isConnected())
             {
