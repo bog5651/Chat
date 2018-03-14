@@ -136,7 +136,7 @@ public class Chat {
             GetListIp(FindHost);
         }
         
-        System.out.println( "Найдено Ip: ");
+        System.out.println( "Найденные Ip: ");
         for(String ip : FindedIp)
         {
             System.out.println(ip);
@@ -152,6 +152,7 @@ public class Chat {
             Thread.sleep(1000);
             if(!FindedIp.isEmpty()){
                 synchronized(FindedIp){
+                    FindedIp.remove(MyIp);
                     for(String ip: FindedIp)
                     {
                         try{
@@ -270,8 +271,6 @@ public class Chat {
     
     public static void GetListIp(String host)
     {
-        boolean find = false;
-        
         Socket Host = null;
         try {// получение списка уже известных ip адресов
             Host = new Socket(host, PortWait);
@@ -284,7 +283,6 @@ public class Chat {
                     Ip = dis.readLine();     
                     if(Ip.equals("END"))
                     {
-                        find = true;
                         break;
                     }
                     FindedIp.add(Ip);
