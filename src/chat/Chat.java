@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -18,9 +17,9 @@ import javax.swing.JTextField;
 public class Chat {
     static int W=300,H=200;
     
-    public static int PortWait = 8031;
-    public static int PortTalk = 8030;
-    public static int TimeToWaitAnswer = 100;
+    public static int PortWait = 8031; //порт отправки IP адресов
+    public static int PortTalk = 8030; //порт для передачи сообщений
+    public static int TimeToWaitAnswer = 100; //таймаут для поиска собеседников
     public static  ArrayList<String> FindedIp = new ArrayList<String>();
     
     public static void main(String[] args) throws InterruptedException 
@@ -169,7 +168,15 @@ public class Chat {
                                             BufferedReader dis = new BufferedReader(new InputStreamReader(
                                             Host.getInputStream()));
                                             String msg = dis.readLine();
-                                            outText.setText(outText.getText() + "\n" + msg);
+                                            if(msg.equals("CONNECTED"))
+                                            {
+                                                String NewIP = dis.readLine();
+                                                FindedIp.add(NewIP);
+                                                outText.setText(outText.getText() + "\n" + "Connected:");
+                                            }
+                                            else{
+                                                outText.setText(outText.getText() + "\n" + msg);
+                                            }
                                         }
                                     } catch (IOException e) {
                                         System.out.println( "ошибка приема: " + e);
@@ -298,5 +305,22 @@ public class Chat {
         }
         System.out.println("Find :" + host);
         FindedIp.add(host);
+    }
+    
+    public static void SendListIp(String ip)
+    {
+        Socket s = null;
+        try { // посылка строки клиенту
+            ServerSocket server = new ServerSocket(PortTalk);
+            s = server.accept();
+            PrintStream ps = new PrintStream(s.getOutputStream());
+            ps.println( "CONNECTED" );
+            ps.println( ip );
+            ps.flush();
+            s.close(); // разрыв соединения
+            server.close();
+        } catch (IOException e) {
+            System. out.println( " ошибка отправки ip: " + e);
+        }
     }
 }
