@@ -100,7 +100,8 @@ public class Chat {
                         s = server.accept();
                         if(s.isConnected()){
                             synchronized(FindedIp){
-                                System.out.println((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
+                                String ConnectedIp = (((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
+                                System.out.println(ConnectedIp);
                                 PrintStream ps = new PrintStream(s.getOutputStream());
                                 for(String ip:FindedIp)
                                 {
@@ -109,7 +110,11 @@ public class Chat {
                                 }
                                 ps.println("END");
                                 ps.flush();
-                                FindedIp.add((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
+//                                for(String ip:FindedIp)
+//                                {
+//                                    SendListIp(ConnectedIp);
+//                                }
+                                FindedIp.add(ConnectedIp);
                             }
                         }
                         s.close(); // разрыв соединения
