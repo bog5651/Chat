@@ -97,12 +97,11 @@ public class Chat {
                 while(true)
                 {
                     if(false==true) break;
-                    try { // посылка строки клиенту
+                    try { // посылка известных IP адресов 
                         s = server.accept();
                         if(s.isConnected()){
                             synchronized(FindedIp){
                                 System.out.println((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
-                                FindedIp.add((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
                                 PrintStream ps = new PrintStream(s.getOutputStream());
                                 for(String ip:FindedIp)
                                 {
@@ -111,6 +110,7 @@ public class Chat {
                                 }
                                 ps.println("END");
                                 ps.flush();
+                                FindedIp.add((((InetSocketAddress) s.getRemoteSocketAddress()).getAddress()).toString().replace("/",""));
                             }
                         }
                         s.close(); // разрыв соединения
@@ -156,7 +156,7 @@ public class Chat {
                     {
                         try{
                             socetToTryConnect = new Socket();
-                            socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
+                            socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), 1500);
                             if(socetToTryConnect.isConnected())
                             {
                                 Socket Host = null;
