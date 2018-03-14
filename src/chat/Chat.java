@@ -271,45 +271,34 @@ public class Chat {
     public static void GetListIp(String host)
     {
         boolean find = false;
-        Socket socetToTryConnect = null;
-        try {
-            socetToTryConnect = new Socket();
-            System.out.println("Try Get:" + host);
-            socetToTryConnect.connect(new InetSocketAddress(host, PortWait), TimeToWaitAnswer);
-            if(socetToTryConnect.isConnected())
-            {
-                Socket Host = null;
+        
+        Socket Host = null;
+        try {// получение списка уже известных ip адресов
+            Host = new Socket(host, PortWait);
+            if(Host.isConnected()){
+                BufferedReader dis = new BufferedReader(new InputStreamReader(
+                Host.getInputStream()));
+                String Ip = "";
                 while(true)
                 {
-                    if(find) break;
-                    try {// получение списка уже известных ip адресов
-                        Host = new Socket(host, PortWait);
-                        if(Host.isConnected()){
-                            BufferedReader dis = new BufferedReader(new InputStreamReader(
-                            Host.getInputStream()));
-                            String Ip = "";
-                            while(true)
-                            {
-                                Ip = dis.readLine();     
-                                if(Ip.equals("END"))
-                                {
-                                    find = true;
-                                    break;
-                                }
-                                FindedIp.add(Ip);
-                            }
-                        }
-                    } catch (IOException e) {
-                        System.out.println( "ошибка приема списка IP: " + e);
+                    Ip = dis.readLine();     
+                    if(Ip.equals("END"))
+                    {
+                        find = true;
+                        break;
                     }
+                    FindedIp.add(Ip);
                 }
-                Host.close();
-                System.out.println("Find :" + host);
-                FindedIp.add(host);
             }
-            socetToTryConnect.close();
         } catch (IOException e) {
-            System.out.println( "ошибка подключения к хосту IP адресов: " + e);
+            System.out.println( "ошибка приема списка IP: " + e);
         }
+        try {
+            Host.close();
+        } catch (IOException e) {
+            System.out.println( "ошибка закрытия сокета: " + e);
+        }
+        System.out.println("Find :" + host);
+        FindedIp.add(host);
     }
 }
