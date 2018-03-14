@@ -21,6 +21,7 @@ public class Chat {
     public static int PortWait = 8031;
     public static int PortTalk = 8030;
     public static int TimeToWaitAnswer = 100;
+    public static  ArrayList<String> FindedIp = new ArrayList<String>();
     
     public static void main(String[] args) throws InterruptedException 
     {        
@@ -48,9 +49,16 @@ public class Chat {
         btn.addActionListener(new ActionListener() { 
             // @Owerride 
             public void actionPerformed(ActionEvent event) { 
-                send(jText.getText()); 
-                outText.setText(outText.getText() + "\n" + jText.getText());
-                jText.setText(""); 
+                if(!FindedIp.isEmpty())
+                {
+                    send(jText.getText()); 
+                    outText.setText(outText.getText() + "\n" + jText.getText());
+                    jText.setText(""); 
+                }
+                else
+                {
+                    outText.setText(outText.getText() + "\n" + "Нет получателя");
+                }
             } 
         }); 
 
@@ -71,10 +79,7 @@ public class Chat {
         System. out.println( " Мой IP ->" + myIP.getHostAddress());
         String ToTryIp = partIp[0] + ".";
         ToTryIp = ToTryIp + partIp[1]+ ".";
-        //ToTryIp = ToTryIp + partIp[2] + ".";
-        
-        ArrayList<String> FindedIp = new ArrayList<String>();
-        //FindedIp.add(MyIp);
+        ToTryIp = ToTryIp + partIp[2] + ".";
         
         //поток "сервер" который радает список известных IP подключившимся
         Thread myThready = new Thread(new Runnable(){
@@ -123,55 +128,14 @@ public class Chat {
         myThready.start();	//Запуск потока
         
         System.out.println( "Перешел в режим поиска соучастников");
-        //ищем первого собеседника
-        Socket socetToTryConnect = null;
-        boolean find = false;
-        for(int i = 0; i < Integer.parseInt(partIp[2]) + 1;i++){
-            if(find) break;
-            for(int j = 0; j<256;j++){
-                if(find) break;
-                if((ToTryIp + i +"." +j).equals(MyIp)) continue;
-                try {
-                    socetToTryConnect = new Socket();
-                    System.out.println("Try :" + ToTryIp + i +"." +j);
-                    socetToTryConnect.connect(new InetSocketAddress(ToTryIp + i +"." +j, PortWait), TimeToWaitAnswer);
-                    if(socetToTryConnect.isConnected())
-                    {
-                        Socket Host = null;
-                        while(true)
-                        {
-                            if(find) break;
-                            try {// получение строки клиентом
-                                Host = new Socket(ToTryIp + i +"." +j, PortWait);
-                                if(Host.isConnected()){
-                                    BufferedReader dis = new BufferedReader(new InputStreamReader(
-                                    Host.getInputStream()));
-                                    String Ip = "";
-                                    while(true)
-                                    {
-                                        Ip = dis.readLine();     
-                                        if(Ip.equals("END"))
-                                        {
-                                            find = true;
-                                            break;
-                                        }
-                                        FindedIp.add(Ip);
-                                    }
-                                }
-                            } catch (IOException e) {
-                                System.out.println( "ошибка приема: " + e);
-                            }
-                        }
-                        Host.close();
-                        System.out.println("Find :" + ToTryIp + i +"." +j);
-                        FindedIp.add(ToTryIp + i +"." +j);
-                    }
-                    socetToTryConnect.close();
-                } catch (IOException e) {
-                    System.out.println( "ошибка подключения: " + e);
-                }
-            }
+        
+        //ищем первого собеседника и качаем с него известные ему IP адреса
+        String FindHost = FindIp(ToTryIp, MyIp, 3);
+        if(FindHost!=null)
+        {   
+            GetListIp(FindHost);
         }
+        
         System.out.println( "Найдено Ip: ");
         for(String ip : FindedIp)
         {
@@ -181,41 +145,46 @@ public class Chat {
         //192.168.43.171
         //172.31.3.9
         //переходим в режим общения
-        //ToStringArray(FindedIp);
-        System.out.println( "Перешел в режим ожидания");
+        Socket socetToTryConnect = null;
+        System.out.println( "Перешел в режим приема/отправки сообщений");
         while(true)
         {
             Thread.sleep(1000);
-            synchronized(FindedIp){
-                for(String ip: FindedIp)
-                {
-                    try{
-                        socetToTryConnect = new Socket();
-                        socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
-                        if(socetToTryConnect.isConnected())
-                        {
-                            Socket Host = null;
-                            while(true)
+            if(!FindedIp.isEmpty()){
+                synchronized(FindedIp){
+                    for(String ip: FindedIp)
+                    {
+                        try{
+                            socetToTryConnect = new Socket();
+                            socetToTryConnect.connect(new InetSocketAddress(ip, PortTalk), TimeToWaitAnswer);
+                            if(socetToTryConnect.isConnected())
                             {
-                                try {// получение строки клиентом
-                                    Host = new Socket(ip, PortTalk);
-                                    if(Host.isConnected()){
-                                        BufferedReader dis = new BufferedReader(new InputStreamReader(
-                                        Host.getInputStream()));
-                                        String msg = dis.readLine();
-                                        outText.setText(outText.getText() + "\n" + msg);
+                                Socket Host = null;
+                                while(true)
+                                {
+                                    try {// получение строки клиентом
+                                        Host = new Socket(ip, PortTalk);
+                                        if(Host.isConnected()){
+                                            BufferedReader dis = new BufferedReader(new InputStreamReader(
+                                            Host.getInputStream()));
+                                            String msg = dis.readLine();
+                                            outText.setText(outText.getText() + "\n" + msg);
+                                        }
+                                        Host.close();
+                                    } catch (IOException e) {
+                                        System.out.println( "ошибка приема: " + e);
                                     }
-                                    Host.close();
-                                } catch (IOException e) {
-                                    System.out.println( "ошибка приема: " + e);
                                 }
                             }
+                            socetToTryConnect.close();
+                        } catch (IOException e) {
+                            System.out.println( "ошибка подключения: " + e);
                         }
-                        socetToTryConnect.close();
-                    } catch (IOException e) {
-                        System.out.println( "ошибка подключения: " + e);
                     }
                 }
+            }
+            else{
+                System.out.println("Список Ip адресов пустой");
             }
         }
     }
@@ -235,6 +204,113 @@ public class Chat {
         } catch (IOException e) {
             System. out.println( " ошибка отправки: " + e);
             return false;
+        }
+    }
+    //передавать в формате ххх.ххх. или ххх.ххх.ххх.
+    public static String FindIp(String IPstart, String LocalIp, int CountIPByte)
+    {
+        switch(CountIPByte)
+        {
+            case 2:
+                for(int i = 0; i< 256; i++)
+                {
+                    String host = IPstart + i;
+                    try {
+                        if(CheckIP(host, LocalIp)!=null)
+                        {
+                            return host;
+                        }
+                    } catch (IOException e) {
+                        System. out.println( "ошибка проверки (FindIp)2: " + e);
+                    }
+                }
+                break;
+            case 3:
+                    try {
+                        String host = CheckIP(IPstart, LocalIp);
+                        if(host!=null)
+                        {
+                            return host;
+                        }
+                    } catch (IOException e) {
+                        System. out.println( "ошибка проверки (FindIp)3: " + e);
+                    }
+                break;
+            default:
+                return null;
+        }
+        return null;
+    }
+    
+    //передавать в формате ххх.ххх.ххх.
+    public static String CheckIP(String IP, String LocalIp) throws IOException
+    {
+        int timeout = 100;
+        boolean find = false;
+        Socket socetToTryConnect = null;
+        for (int i = 2; i < 256; i++){
+            String host = IP + i;
+            if(!host.equals(LocalIp))
+            {
+                try {
+                    socetToTryConnect = new Socket();
+                    System.out.println("Try :" + host);
+                    socetToTryConnect.connect(new InetSocketAddress(host, PortWait), timeout);
+                    if(socetToTryConnect.isConnected())
+                    {                    
+                        return host;
+                    }
+                    socetToTryConnect.close();
+                } catch (IOException e) {
+                    System.out.println( "ошибка подключения к хосту IP адресов: " + e);
+                }
+            }
+        }
+        return null;
+    }
+    
+    public static void GetListIp(String host)
+    {
+        boolean find = false;
+        Socket socetToTryConnect = null;
+        try {
+            socetToTryConnect = new Socket();
+            System.out.println("Try :" + host);
+            socetToTryConnect.connect(new InetSocketAddress(host, PortWait), TimeToWaitAnswer);
+            if(socetToTryConnect.isConnected())
+            {
+                Socket Host = null;
+                while(true)
+                {
+                    if(find) break;
+                    try {// получение списка уже известных ip адресов
+                        Host = new Socket(host, PortWait);
+                        if(Host.isConnected()){
+                            BufferedReader dis = new BufferedReader(new InputStreamReader(
+                            Host.getInputStream()));
+                            String Ip = "";
+                            while(true)
+                            {
+                                Ip = dis.readLine();     
+                                if(Ip.equals("END"))
+                                {
+                                    find = true;
+                                    break;
+                                }
+                                FindedIp.add(Ip);
+                            }
+                        }
+                    } catch (IOException e) {
+                        System.out.println( "ошибка приема списка IP: " + e);
+                    }
+                }
+                Host.close();
+                System.out.println("Find :" + host);
+                FindedIp.add(host);
+            }
+            socetToTryConnect.close();
+        } catch (IOException e) {
+            System.out.println( "ошибка подключения к хосту IP адресов: " + e);
         }
     }
 }
