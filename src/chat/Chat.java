@@ -10,13 +10,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class Chat {
-    static int W=300,H=200;
     
+    public static String nick = "Guest";
     public static int PortWait = 8031; //порт отправки IP адресов
     public static int PortTalk = 8030; //порт для передачи сообщений
     public static int TimeToWaitAnswer = 100; //таймаут для поиска собеседников
@@ -24,24 +25,27 @@ public class Chat {
     
     public static void main(String[] args) throws InterruptedException 
     {        
+        setNick();
         JFrame fr=new JFrame("Чат"); 
-        fr.setPreferredSize( new Dimension(440,300));//по фпкту 300х300 
+        fr.setPreferredSize( new Dimension(425,300));//по фпкту 300х300 
+        fr.setLocation(600,300);
         fr.setVisible(true); 
+        fr.setResizable(false);
         fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
         fr.setLayout(null); 
         JTextField jText = new JTextField(); 
-        JButton btn = new JButton("Отправить сообщение"); 
-        JTextArea outText = new JTextArea("text"); 
+        JButton btn = new JButton("ОТПРАВИТЬ СООБЩЕНИЕ"); 
+        JTextArea outText = new JTextArea(); 
         JScrollPane scroll = new JScrollPane(outText);
 
         fr.add(jText); 
         fr.add(btn); 
         fr.add(scroll); 
-
-        scroll.setBounds(10,122,400,100);
+        
+        scroll.setBounds(10,122,400,140);
         outText.setEditable(false); 
         outText.setLineWrap(true);
-
+        
         jText.setBounds(10, 11, 400, 30); 
         btn.setBounds(10,62,400,50);
 
@@ -50,13 +54,16 @@ public class Chat {
             public void actionPerformed(ActionEvent event) { 
                 if(!FindedIp.isEmpty())
                 {
-                    send(jText.getText()); 
-                    outText.setText(outText.getText() + "\n" + jText.getText());
+                    if(!jText.getText().isEmpty())
+                    {
+			outText.setText(outText.getText() + nick + ": " +jText.getText() + "\n");
+                        send(nick + ": " +jText.getText()); 
+                    }
                     jText.setText(""); 
                 }
                 else
                 {
-                    outText.setText(outText.getText() + "\n" + "Нет получателя");
+                    outText.setText(outText.getText() + "Нет получателя"  + "\n");
                 }
             } 
         }); 
@@ -133,14 +140,22 @@ public class Chat {
         
         System.out.println( "Перешел в режим поиска соучастников");
         
-        //ищем первого собеседника и качаем с него известные ему IP адреса
+        outText.setText("Finding..." + "\n");
+        
+        //ищем первого собеседника и качаем с него известные ему IP адреса        
         String FindHost = FindIp(ToTryIp, MyIp, 3);
         if(FindHost!=null)
         {   
+            outText.setText("Connecting..." + "\n");
             GetListIp(FindHost);
+            outText.setText("Connected" + "\n");
+        }
+        else
+        {
+            outText.setText("Don't Found. Wait interlocutors" + "\n");
         }
         
-        System.out.println( "Найденные Ip: ");
+        System.out.println( "Найдено Ip: " + FindedIp.size());
         for(String ip : FindedIp)
         {
             System.out.println(ip);
@@ -287,6 +302,7 @@ public class Chat {
         try {// получение списка уже известных ip адресов
             Host = new Socket(host, PortWait);
             if(Host.isConnected()){
+                FindedIp.add(host);
                 BufferedReader dis = new BufferedReader(new InputStreamReader(
                 Host.getInputStream()));
                 String Ip = "";
@@ -308,8 +324,6 @@ public class Chat {
         } catch (IOException e) {
             System.out.println( "ошибка закрытия сокета: " + e);
         }
-        System.out.println("Find :" + host);
-        FindedIp.add(host);
     }
     
     public static void SendListIp(String ip)
@@ -328,4 +342,52 @@ public class Chat {
             System. out.println( " ошибка отправки ip: " + e);
         }
     }
+    
+    public static boolean setNickNotEmpty = false;
+    
+    public static void setNick()
+    {
+        JFrame f=new JFrame("Никнейм"); 
+        f.setPreferredSize( new Dimension(325,150));//по фпкту 300х300 
+        f.setLocation(600,300);
+        f.setVisible(true);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setResizable(false);
+        f.setLayout(null); 
+        JTextField Text = new JTextField(""); 
+        JButton bt = new JButton("ОK"); 
+        JLabel label = new JLabel("ВВЕДИТЕ НИК:");
+
+        f.add(label);
+        f.add(Text); 
+        f.add(bt); 
+        label.setBounds(10, 11, 100, 30);
+        Text.setBounds(100, 11, 210, 30); 
+        bt.setBounds(10,62,300,50); 
+        
+        
+        bt.addActionListener(new ActionListener() 
+        { 
+            @Override
+            public void actionPerformed(ActionEvent event) 
+            { 
+                if(!Text.getText().isEmpty()) 
+                {
+                    nick = Text.getText();
+                    f.dispose();
+                    setNickNotEmpty = true;
+                }
+            } 
+        }); 
+        f.pack();
+        while(!setNickNotEmpty)
+        {
+            try {
+                Thread.sleep(1000); // без сна отказывается работать
+            } catch (InterruptedException e) {
+                System.out.println( "ошибка сна потока в выборе никнейма: " + e);
+            }
+        }
+    }
+    
 }
